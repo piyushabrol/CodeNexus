@@ -97,95 +97,6 @@ function isCommandMissing(result) {
   );
 }
 
-async function runJava(tempDir, code, stdin, timeoutMs) {
-  const file = path.join(tempDir, "Main.java");
-  writeFile(file, code);
-
-  const compile = await runCmd("javac", ["Main.java"], {
-    cwd: tempDir,
-    timeoutMs,
-  });
-
-  if (compile.code !== 0 && isCommandMissing(compile)) {
-    return {
-      status: "CE",
-      code: 1,
-      timeMs: compile.timeMs,
-      stdout: "",
-      stderr: "Java compiler is not available on the server.",
-      timedOut: false,
-    };
-  }
-
-  if (compile.code !== 0) {
-    return { status: "CE", ...compile };
-  }
-
-  const run = await runCmd("java", ["Main"], {
-    cwd: tempDir,
-    stdin,
-    timeoutMs,
-  });
-
-  if (run.code !== 0 && isCommandMissing(run)) {
-    return {
-      status: "RE",
-      code: 1,
-      timeMs: run.timeMs,
-      stdout: "",
-      stderr: "Java runtime is not available on the server.",
-      timedOut: false,
-    };
-  }
-
-  return {
-    status: run.timedOut ? "TLE" : run.code === 0 ? "OK" : "RE",
-    ...run,
-  };
-}
-
-async function runCpp(tempDir, code, stdin, timeoutMs) {
-  const cpp = path.join(tempDir, "main.cpp");
-  writeFile(cpp, code);
-
-  const exeName = process.platform === "win32" ? "main.exe" : "main";
-
-  const compile = await runCmd(
-    "g++",
-    ["main.cpp", "-O2", "-std=c++17", "-o", exeName],
-    {
-      cwd: tempDir,
-      timeoutMs,
-    }
-  );
-
-  if (compile.code !== 0 && isCommandMissing(compile)) {
-    return {
-      status: "CE",
-      code: 1,
-      timeMs: compile.timeMs,
-      stdout: "",
-      stderr: "C++ compiler is not available on the server.",
-      timedOut: false,
-    };
-  }
-
-  if (compile.code !== 0) {
-    return { status: "CE", ...compile };
-  }
-
-  const run = await runCmd(path.join(tempDir, exeName), [], {
-    cwd: tempDir,
-    stdin,
-    timeoutMs,
-  });
-
-  return {
-    status: run.timedOut ? "TLE" : run.code === 0 ? "OK" : "RE",
-    ...run,
-  };
-}
-
 async function runPython(tempDir, code, stdin, timeoutMs) {
   const file = path.join(tempDir, "main.py");
   writeFile(file, code);
@@ -241,14 +152,6 @@ async function execute({ language, code, stdin, timeoutMs }) {
   const tempDir = mkTempDir();
 
   try {
-    if (language === "java") {
-      return await runJava(tempDir, code, stdin, timeoutMs);
-    }
-
-    if (language === "cpp") {
-      return await runCpp(tempDir, code, stdin, timeoutMs);
-    }
-
     if (language === "python") {
       return await runPython(tempDir, code, stdin, timeoutMs);
     }
@@ -262,7 +165,7 @@ async function execute({ language, code, stdin, timeoutMs }) {
       code: 1,
       timeMs: 0,
       stdout: "",
-      stderr: "Unsupported language",
+      stderr: "Only JavaScript and Python are supported on this server right now.",
       timedOut: false,
     };
   } finally {
