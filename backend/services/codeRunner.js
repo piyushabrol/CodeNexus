@@ -148,16 +148,56 @@ async function runJS(tempDir, code, stdin, timeoutMs) {
   };
 }
 
+function wrapCode(language, code) {
+  if (language === "javascript") {
+    const hasSolve = /\bfunction\s+solve\b|\bconst\s+solve\s*=/.test(code);
+    const hasCall = /solve\(/.test(code.replace(/\bfunction\s+solve\b|\bconst\s+solve\s*=/, ""));
+    
+    if (hasSolve && !hasCall) {
+      return code + `
+\n\n// Automatically appended driver code by CodeNexus
+if (typeof solve === 'function') {
+  const fs = require('fs');
+  const input = fs.readFileSync(0, 'utf-8');
+  const result = solve(input);
+  if (result !== undefined) {
+    process.stdout.write(typeof result === 'object' ? JSON.stringify(result) : String(result));
+  }
+}
+`;
+    }
+  }
+
+  if (language === "python") {
+    const hasSolve = /\bdef\s+solve\b/.test(code);
+    const hasCall = /solve\(/.test(code.replace(/\bdef\s+solve\b/, ""));
+
+    if (hasSolve && !hasCall) {
+      return code + `
+\n\n# Automatically appended driver code by CodeNexus
+if 'solve' in globals() and callable(globals()['solve']):
+    import sys
+    result = solve(sys.stdin.read())
+    if result is not None:
+        sys.stdout.write(str(result))
+`;
+    }
+  }
+
+  return code;
+}
+
 async function execute({ language, code, stdin, timeoutMs }) {
   const tempDir = mkTempDir();
+  const wrappedCode = wrapCode(language, code);
 
   try {
     if (language === "python") {
-      return await runPython(tempDir, code, stdin, timeoutMs);
+      return await runPython(tempDir, wrappedCode, stdin, timeoutMs);
     }
 
     if (language === "javascript") {
-      return await runJS(tempDir, code, stdin, timeoutMs);
+      return await runJS(tempDir, wrappedCode, stdin, timeoutMs);
     }
 
     return {

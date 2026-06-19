@@ -11,16 +11,16 @@ function NavItem({ to, label }) {
   return (
     <Link
       to={to}
-      className={`group relative px-2 py-1 text-sm font-medium transition
-        ${active ? "text-emerald-400" : "text-gray-300 hover:text-emerald-300"}
+      className={`group relative px-3 py-1.5 text-xs font-semibold uppercase tracking-wider transition-colors duration-200
+        ${active ? "text-emerald-400" : "text-gray-400 hover:text-white"}
       `}
     >
       {label}
 
-      {/* underline animation */}
+      {/* underline active animation */}
       <span
-        className={`absolute left-0 -bottom-1 h-[2px] bg-emerald-400 transition-all duration-300
-          ${active ? "w-full" : "w-0 group-hover:w-full"}
+        className={`absolute left-3 bottom-0 h-[2px] bg-emerald-400 transition-all duration-300
+          ${active ? "w-[calc(100%-24px)]" : "w-0 group-hover:w-[calc(100%-24px)]"}
         `}
       />
     </Link>
@@ -30,8 +30,6 @@ function NavItem({ to, label }) {
 function MainLayout({ children }) {
   const { user, logout } = useAuth();
   const { pathname } = useLocation();
-
-  const isAuthPage = pathname === "/login" || pathname === "/register";
 
   const [openAccount, setOpenAccount] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
@@ -55,61 +53,47 @@ function MainLayout({ children }) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#020617] text-white">
-      {/* NAVBAR */}
-      <nav className="sticky top-0 z-50 backdrop-blur bg-[#0f172a]/80 border-b border-white/10">
-        <div className="px-6 py-4 flex justify-between items-center">
+      
+      {/* GLOWING HEADER NAVBAR */}
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-slate-950/70 border-b border-white/5 shadow-[0_1px_20px_rgba(0,0,0,0.4)]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          
           {/* LEFT: Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <LogoMark size={34} />
-
-            {isAuthPage && (
-              <span className="text-xl font-bold tracking-wide text-emerald-400">
-                CodeNexus
-              </span>
-            )}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="p-1.5 bg-emerald-500/5 rounded-xl border border-emerald-500/10 group-hover:border-emerald-500/25 transition duration-300">
+              <LogoMark size={28} />
+            </div>
+            <span className="text-lg font-bold tracking-tight text-white group-hover:text-emerald-400 transition duration-300">
+              Code<span className="text-emerald-400 group-hover:text-white transition duration-300 font-extrabold">Nexus</span>
+            </span>
           </Link>
 
           {/* RIGHT SIDE */}
-          <div className="flex items-center gap-6">
-            <NavItem to="/" label="Home" />
-            <NavItem to="/problems" label="Problems" />
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-2">
+              <NavItem to="/" label="Home" />
+              <NavItem to="/problems" label="Problems" />
+              {user && <NavItem to="/my-submissions" label="Submissions" />}
+              {user?.role === "admin" && <NavItem to="/admin/create-problem" label="Add Problem" />}
+            </div>
 
-            {user && <NavItem to="/my-submissions" label="My Submissions" />}
-
-            {/* ADMIN ONLY */}
-            {user?.role === "admin" && (
-              <NavItem to="/admin/create-problem" label="Add Problem" />
-            )}
+            <span className="hidden sm:inline text-white/5">|</span>
 
             {/* ACCOUNT MENU (NOT LOGGED IN) */}
             {!user && (
-              <div className="relative" ref={accountRef}>
-                <button
-                  onClick={() => setOpenAccount((v) => !v)}
-                  className="bg-[#111827] border border-gray-700 px-4 py-2 rounded-lg text-sm hover:border-emerald-500 transition"
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/login"
+                  className="text-xs font-semibold px-4 py-2 text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
                 >
-                  Account ▾
-                </button>
-
-                {openAccount && (
-                  <div className="absolute right-0 mt-2 w-44 bg-[#0f172a] border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-                    <Link
-                      to="/login"
-                      onClick={() => setOpenAccount(false)}
-                      className="block px-4 py-2 hover:bg-[#111827]"
-                    >
-                      Login
-                    </Link>
-
-                    <Link
-                      to="/register"
-                      onClick={() => setOpenAccount(false)}
-                      className="block px-4 py-2 hover:bg-[#111827]"
-                    >
-                      Sign up
-                    </Link>
-                  </div>
-                )}
+                  Log in
+                </Link>
+                <Link
+                  to="/register"
+                  className="text-xs font-bold px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 rounded-lg shadow-md shadow-emerald-500/5 hover:shadow-emerald-500/10 hover:-translate-y-0.5 transition duration-200"
+                >
+                  Sign up
+                </Link>
               </div>
             )}
 
@@ -118,28 +102,49 @@ function MainLayout({ children }) {
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setOpenProfile((v) => !v)}
-                  className="flex items-center gap-2 bg-[#111827] border border-gray-700 px-2 py-1.5 rounded-lg hover:border-emerald-500 transition"
+                  className="flex items-center gap-2 bg-slate-900/60 border border-white/5 hover:border-emerald-500/30 p-1 rounded-full hover:scale-105 transition duration-300"
                 >
-                  <div className="w-9 h-9 bg-emerald-500 rounded-full flex items-center justify-center text-black font-bold">
+                  <div className="w-8 h-8 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center text-slate-950 font-extrabold text-sm shadow-md shadow-emerald-500/10">
                     {user.name?.charAt(0)?.toUpperCase() || "U"}
                   </div>
                 </button>
 
                 {openProfile && (
-                  <div className="absolute right-0 mt-2 w-48 bg-[#0f172a] border border-gray-800 rounded-xl shadow-lg overflow-hidden">
-                    <div className="px-4 py-2 border-b border-gray-800 text-sm text-gray-300">
-                      {user.name}
+                  <div className="absolute right-0 mt-2.5 w-52 bg-slate-950/90 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fadeIn">
+                    <div className="px-4 py-3 border-b border-white/5 bg-slate-900/20">
+                      <div className="text-xs text-gray-400">Signed in as</div>
+                      <div className="text-sm font-semibold text-white truncate mt-0.5">{user.name}</div>
+                      <div className="text-[10px] text-gray-500 truncate">{user.email}</div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        setOpenProfile(false);
-                        logout();
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-[#111827] text-red-400"
-                    >
-                      Logout
-                    </button>
+                    <div className="p-1 space-y-0.5">
+                      <Link
+                        to="/problems"
+                        onClick={() => setOpenProfile(false)}
+                        className="block px-4 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
+                      >
+                        All Problems
+                      </Link>
+                      <Link
+                        to="/my-submissions"
+                        onClick={() => setOpenProfile(false)}
+                        className="block px-4 py-2 text-xs text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition"
+                      >
+                        My Submissions
+                      </Link>
+                      
+                      <div className="h-[1px] bg-white/5 my-1" />
+
+                      <button
+                        onClick={() => {
+                          setOpenProfile(false);
+                          logout();
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition"
+                      >
+                        Sign out
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -148,8 +153,8 @@ function MainLayout({ children }) {
         </div>
       </nav>
 
-      {/* ✅ PAGE CONTENT grows, footer stays bottom */}
-      <main className="flex-1 p-8">{children}</main>
+      {/* PAGE CONTENT */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 animate-fadeIn">{children}</main>
 
       {/* FOOTER */}
       <Footer />
